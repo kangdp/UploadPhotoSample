@@ -86,20 +86,19 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     private fun openCamera() {
         val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
         if (intent.resolveActivity(packageManager) != null) {
-            fileUri = createFileUri()
+            val photoFile = createFile()
+            filePath = photoFile.absolutePath
+            fileUri = createFileUri(photoFile)
             intent.putExtra(MediaStore.EXTRA_OUTPUT,fileUri)
             startActivityForResult(intent, REQUEST_IMAGE_CAPTURE)
         }
     }
 
-    private fun createFileUri(): Uri? {
-        val photoFile = createFile()
-        filePath = photoFile.absolutePath
-
+    private fun createFileUri(file: File): Uri? {
         return if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
-            Uri.fromFile(photoFile)
+            Uri.fromFile(file)
         } else {
-            FileProvider.getUriForFile(this,BuildConfig.APPLICATION_ID,photoFile)
+            FileProvider.getUriForFile(this,BuildConfig.APPLICATION_ID,file)
         }
     }
 
@@ -116,8 +115,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                     clipPhoto(fileUri)
                 }
                 REQUEST_OPEN_ALBUM -> {
-                    Log.d(MainActivity::class.java.simpleName,"Abulm path = ${data?.data?.lastPathSegment}")
                     openAlbumCallback(data)
+
                 }
                 REQUEST_IMAGE_CROP -> {
                     takePhotoCallback()
@@ -133,7 +132,15 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             val cursor: Cursor? = contentResolver.query(selectedImage,filePathColumn,null,null,null)
             cursor?.moveToFirst()
             val pictureUrl = cursor?.getString(cursor.getColumnIndex(MediaStore.Images.Media.DATA))
-            runOnUiThread { ivImg.setImageBitmap(BitmapFactory.decodeFile(pictureUrl)) }
+            filePath = pictureUrl
+            val file = File(filePath)
+            if (file.exists()){
+                Log.d(MainActivity::class.java.simpleName,"exits")
+            }
+            fileUri = createFileUri(file)
+            runOnUiThread {
+                clipPhoto(fileUri)
+            }
         }
     }
 
@@ -171,17 +178,18 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         intent.putExtra("outputX", ivImg?.measuredWidth)
         intent.putExtra("outputY", ivImg?.measuredHeight)
         intent.putExtra("return-data", false)//表示data中返回null
-        intent.putExtra(MediaStore.EXTRA_OUTPUT, uri)
+        intent.putExtra(MediaStore.EXTRA_OUTPUT, uri)//设置裁剪后图片保存的路径
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N){
             //7.0以上需要加上两个权限，否则获取不到裁剪后的图片
             intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
         }
         //设置裁剪后图片的格式
-        intent.putExtra("outputFormat", Bitmap.CompressFormat.JPEG.toString())
+        intent.putExtra("outputFormat", Bitmap.CompressFormat.PNG.toString())
         //将图片拉伸，否贼图片周围会出现黑边
-        intent.putExtra("scale",true);
-        intent.putExtra("scaleUpIfNeeded", true);
+        intent.putExtra("scale",true)
+        intent.putExtra("scaleUpIfNeeded", true)
+        intent.putExtra("noFaceDetection", false)
         startActivityForResult(intent,REQUEST_IMAGE_CROP)
 
 
