@@ -1,8 +1,6 @@
 package com.kdp.uploadphotosample
 
 import android.Manifest
-import android.annotation.SuppressLint
-import android.content.ContentProvider
 import androidx.appcompat.app.AppCompatActivity
 
 import android.content.Intent
@@ -16,7 +14,6 @@ import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
 import android.util.Log
-import android.util.TypedValue
 import android.view.View
 import android.widget.Toast
 import androidx.core.content.FileProvider
@@ -24,12 +21,7 @@ import com.common.lib.permission.KPermission
 import kotlinx.android.synthetic.main.activity_main.*
 
 import java.io.File
-import java.lang.IndexOutOfBoundsException
-import java.text.SimpleDateFormat
-import java.util.*
-import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
-import kotlin.math.log
 
 /**
  * 拍照、相册
@@ -50,6 +42,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         setContentView(R.layout.activity_main)
         btnOpenCamera.setOnClickListener(this)
         btnOpenAlbum.setOnClickListener(this)
+
+
     }
 
     private fun requestPermission() {
@@ -67,6 +61,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 }
     }
 
+
     override fun onClick(v: View) {
         if (v === btnOpenCamera) {
             requestPermission()
@@ -75,6 +70,9 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         }
     }
 
+    /**
+     * 打开相册
+     */
     private fun openAblum() {
         val intent = Intent(Intent.ACTION_PICK,MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
         startActivityForResult(intent, REQUEST_OPEN_ALBUM)
@@ -106,6 +104,9 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         return Environment.getExternalStoragePublicDirectory("${Environment.DIRECTORY_PICTURES}/${System.currentTimeMillis()}.png")
     }
 
+    /**
+     * 拍照、选中照片、裁剪后的结果回调
+     */
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (resultCode == RESULT_OK) {
@@ -116,7 +117,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 }
                 REQUEST_OPEN_ALBUM -> {
                     openAlbumCallback(data)
-
                 }
                 REQUEST_IMAGE_CROP -> {
                     takePhotoCallback()
@@ -191,8 +191,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         intent.putExtra("scaleUpIfNeeded", true)
         intent.putExtra("noFaceDetection", false)
         startActivityForResult(intent,REQUEST_IMAGE_CROP)
-
-
     }
 
 
